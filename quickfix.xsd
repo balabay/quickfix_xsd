@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="fix" type="fixType"/>
+  
+	<xs:simpleType name="attrComponentNameType">
+	  <xs:restriction base="xs:token"/>
+	</xs:simpleType>
+
+	<xs:simpleType name="attrGroupNameType">
+	  <xs:restriction base="xs:token"/>
+	</xs:simpleType>
+
+	<xs:simpleType name="attrFieldNameType">
+	  <xs:restriction base="xs:token"/>
+	</xs:simpleType>
+	
+	<xs:simpleType name="attrFieldNumberType">
+	  <xs:restriction base="xs:positiveInteger"/>
+	</xs:simpleType>
+	
+	<xs:simpleType name="attrFieldTypeType">
+	  <xs:restriction base="xs:token"/>
+	</xs:simpleType>
+
+	<xs:simpleType name="attrMessageCatType">
+	  <xs:restriction base="xs:token">
+	  	 <xs:pattern value="admin|app"/>
+	  </xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="attrMessageNameType">
+	  <xs:restriction base="xs:token"/>
+	</xs:simpleType>
+	
+	<xs:simpleType name="attrMessageTypeType">
+	  <xs:restriction base="xs:token"/>
+	</xs:simpleType>
+	
+	<xs:simpleType name="attrRequiredType">
+	  <xs:restriction base="xs:token">
+	  	 <xs:pattern value="Y|N|y|n"/>
+	  </xs:restriction>
+	</xs:simpleType>
+ 
+ 	<xs:simpleType name="attrTypeType">
+	  <xs:restriction base="xs:token">
+	  	 <xs:pattern value="FIX|FIXT"/>
+	  </xs:restriction>
+	</xs:simpleType>
+ 
+  <xs:complexType name="fieldRefType">
+    <xs:attribute type="attrRequiredType" name="required" use="optional"/>
+    <xs:attribute type="attrFieldNameType" name="name" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="componentRefType">
+    <xs:attribute type="attrRequiredType" name="required" use="optional"/>
+    <xs:attribute type="attrComponentNameType" name="name" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="componentType">
+    <xs:choice maxOccurs="unbounded" minOccurs="0">
+      <xs:element type="fieldRefType" name="field"/>
+      <xs:element type="groupType" name="group"/>
+      <xs:element type="componentRefType" name="component"/>
+    </xs:choice>
+    <xs:attribute type="attrComponentNameType" name="name" use="required"/>
+  </xs:complexType>
+  
+  <xs:complexType name="groupType">
+    <xs:choice maxOccurs="unbounded" minOccurs="0">
+      <xs:element type="fieldRefType" name="field"/>
+      <xs:element type="groupType" name="group"/>
+      <xs:element type="componentRefType" name="component"/>
+    </xs:choice>
+    <xs:attribute type="attrGroupNameType" name="name" use="required"/>
+    <xs:attribute type="attrRequiredType" name="required" use="optional"/>
+  </xs:complexType>
+
+  <xs:complexType name="headerType">
+    <!-- For FIXT and FIX < 5 minOccurs="1" -->
+    <xs:choice maxOccurs="unbounded" minOccurs="0">
+      <xs:element type="fieldRefType" name="field"/>
+      <xs:element type="groupType" name="group"/>
+    </xs:choice>
+  </xs:complexType>
+  
+  <xs:complexType name="trailerType">
+    <!-- For FIXT and FIX < 5 minOccurs="1" -->
+    <xs:choice maxOccurs="unbounded" minOccurs="0">
+      <xs:element type="fieldRefType" name="field"/>
+      <xs:element type="groupType" name="group"/>
+     </xs:choice>
+  </xs:complexType>
+  
+  <xs:complexType name="messageType">
+    <xs:choice maxOccurs="unbounded" minOccurs="0">
+      <xs:element type="fieldRefType" name="field"/>
+      <xs:element type="componentRefType" name="component"/>
+      <xs:element type="groupType" name="group">
+      </xs:element>
+    </xs:choice>
+    <xs:attribute type="attrMessageNameType" name="name" use="optional"/>
+    <xs:attribute type="attrMessageCatType" name="msgcat" use="required"/>
+    <xs:attribute type="attrMessageTypeType" name="msgtype" use="required"/>
+  </xs:complexType>
+  
+  <xs:complexType name="messagesType">
+    <xs:sequence>
+      <xs:element type="messageType" name="message" maxOccurs="unbounded" minOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="componentsType">
+    <xs:sequence>
+      <xs:element type="componentType" name="component" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="valueType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute type="xs:string" name="enum" use="required"/>
+        <xs:attribute type="xs:string" name="description" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="fieldType">
+    <xs:sequence>
+      <xs:element type="valueType" name="value" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute type="attrFieldNameType" name="name" use="required"/>
+    <xs:attribute type="attrFieldNumberType" name="number" use="required"/>
+    <xs:attribute type="attrFieldTypeType" name="type" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="fieldsType">
+    <xs:sequence>
+      <xs:element type="fieldType" name="field" maxOccurs="unbounded" minOccurs="1">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="fixType">
+    <xs:sequence>
+      <xs:element type="headerType" name="header"/>
+      <!-- FIXT11.xml puts trailer here -->
+      <xs:element type="trailerType" name="trailer" minOccurs="0"/>
+      <xs:element type="messagesType" name="messages"/>
+      <!-- All other specs put trailer here -->
+      <xs:element type="trailerType" name="trailer" minOccurs="0"/>
+      <xs:element type="componentsType" name="components"/>
+      <xs:element type="fieldsType" name="fields"/>
+    </xs:sequence>
+    <xs:attribute type="xs:byte" name="major" use="required"/>
+    <xs:attribute type="attrTypeType" name="type" use="required"/>
+    <xs:attribute type="xs:byte" name="servicepack"/>
+    <xs:attribute type="xs:byte" name="minor" use="required"/>
+  </xs:complexType>
+</xs:schema>
